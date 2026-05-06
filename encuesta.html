@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Encuesta — Filtros Ecológicos SENA 2026</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: Arial, sans-serif;
+    background: #f0f0f0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .header {
+    background: #2d5a27;
+    padding: 14px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 3px solid #1a3a16;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+  .header-title { font-size: 16px; font-weight: bold; color: #fff; }
+  .header-count {
+    font-size: 12px;
+    color: rgba(255,255,255,0.75);
+    background: rgba(255,255,255,0.12);
+    padding: 4px 12px;
+    border-radius: 2px;
+  }
+
+  .progress-bar-bg { height: 5px; background: #c8c0aa; }
+  .progress-bar-fill {
+    height: 100%;
+    background: #2d5a27;
+    transition: width 0.35s ease;
+    width: 10%;
+  }
+
+  .wrapper {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 16px;
+  }
+
+  .card {
+    background: #fff;
+    border: 1.5px solid #c8c0aa;
+    border-radius: 6px;
+    width: 100%;
+    max-width: 620px;
+    padding: 36px 40px 32px;
+    display: none;
+    animation: slideIn 0.25s ease;
+  }
+  .card.active { display: block; }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .q-num {
+    font-size: 11px;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 10px;
+  }
+  .q-text {
+    font-size: 18px;
+    font-weight: bold;
+    color: #1a1a14;
+    line-height: 1.4;
+    margin-bottom: 20px;
+  }
+  .q-note {
+    font-size: 12px;
+    color: #4a7a46;
+    background: #eaf4e8;
+    border-left: 3px solid #2d5a27;
+    padding: 9px 13px;
+    margin-bottom: 20px;
+    line-height: 1.55;
+    border-radius: 0 3px 3px 0;
+  }
+
+  .options { display: flex; flex-direction: column; gap: 9px; }
+
+  .opt {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    padding: 12px 16px;
+    border: 1.5px solid #c8c0aa;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+    user-select: none;
+  }
+  .opt:hover { border-color: #4a8c42; background: #f2faf0; }
+  .opt:has(input:checked) { border-color: #2d5a27; background: #eaf4e8; }
+
+  .opt input[type="radio"],
+  .opt input[type="checkbox"] {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 18px; height: 18px;
+    border: 2px solid #b0a898;
+    border-radius: 50%;
+    flex-shrink: 0;
+    position: relative;
+    transition: all 0.15s;
+    cursor: pointer;
+  }
+  .opt input[type="checkbox"] { border-radius: 3px; }
+  .opt input[type="radio"]:checked,
+  .opt input[type="checkbox"]:checked {
+    background: #2d5a27;
+    border-color: #2d5a27;
+  }
+  .opt input[type="radio"]:checked::after {
+    content: '';
+    position: absolute;
+    width: 6px; height: 6px;
+    background: white;
+    border-radius: 50%;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+  }
+  .opt input[type="checkbox"]:checked::after {
+    content: '';
+    position: absolute;
+    width: 9px; height: 5px;
+    border-left: 2px solid white;
+    border-bottom: 2px solid white;
+    top: 45%; left: 50%;
+    transform: translate(-50%, -50%) rotate(-45deg);
+  }
+  .opt-text { font-size: 14px; color: #1a1a14; line-height: 1.4; }
+
+  .err-msg {
+    display: none;
+    font-size: 12px;
+    color: #b84f2a;
+    margin-top: 10px;
+  }
+  .card.has-error .err-msg { display: block; }
+  .card.has-error { border-color: #b84f2a; }
+
+  .nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 28px;
+  }
+  .btn-back {
+    background: none;
+    border: 1.5px solid #c8c0aa;
+    border-radius: 4px;
+    padding: 10px 22px;
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+    color: #6b6558;
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s;
+  }
+  .btn-back:hover { border-color: #2d5a27; color: #2d5a27; }
+  .btn-back:disabled { opacity: 0.3; cursor: not-allowed; }
+  .btn-next {
+    background: #2d5a27;
+    border: none;
+    border-radius: 4px;
+    padding: 11px 28px;
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+    font-weight: bold;
+    color: white;
+    cursor: pointer;
+    transition: background 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .btn-next:hover { background: #4a8c42; }
+  .btn-next svg { width: 15px; height: 15px; }
+
+  .success {
+    display: none;
+    background: #fff;
+    border: 1.5px solid #c8c0aa;
+    border-radius: 6px;
+    width: 100%;
+    max-width: 620px;
+    padding: 52px 40px;
+    text-align: center;
+    animation: slideIn 0.3s ease;
+  }
+  .success.active { display: block; }
+  .success-check {
+    width: 64px; height: 64px;
+    background: #2d5a27;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+  }
+  .success-check svg { width: 30px; height: 30px; color: white; }
+  .success h2 { font-size: 22px; color: #2d5a27; margin-bottom: 10px; }
+  .success p { font-size: 14px; color: #6b6558; line-height: 1.6; }
+  .success-id {
+    display: inline-block;
+    margin-top: 18px;
+    font-size: 11px;
+    color: #888;
+    background: #f0f0f0;
+    padding: 7px 18px;
+    border-radius: 2px;
+    letter-spacing: 0.08em;
+  }
+
+  @media (max-width: 500px) {
+    .card, .success { padding: 24px 18px 20px; }
+    .header { padding: 12px 18px; }
+    .q-text { font-size: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <span class="header-title">Encuesta — Filtros Ecológicos</span>
+  <span class="header-count" id="hcount">1 / 10</span>
+</div>
+<div class="progress-bar-bg">
+  <div class="progress-bar-fill" id="pbar"></div>
+</div>
+
+<div class="wrapper">
+
+  <!-- P1 -->
+  <div class="card active" id="card-1">
+    <p class="q-num">Pregunta 1 de 10</p>
+    <p class="q-text">¿Sabe qué tanto daño hacen las colillas de cigarrillo cuando llegan al agua?</p>
+    <div class="q-note">Una sola colilla puede contaminar hasta 50 litros de agua al liberar nicotina, metales pesados y acetato de celulosa.</div>
+    <div class="options">
+      <label class="opt"><input type="radio" name="p1" value="a"><span class="opt-text">No lo sabía y me parece grave</span></label>
+      <label class="opt"><input type="radio" name="p1" value="b"><span class="opt-text">Tenía una idea general pero no conocía la magnitud</span></label>
+      <label class="opt"><input type="radio" name="p1" value="c"><span class="opt-text">Lo sabía, pero no me preocupa especialmente</span></label>
+      <label class="opt"><input type="radio" name="p1" value="d"><span class="opt-text">Lo sabía y es un tema que me preocupa mucho</span></label>
+    </div>
+    <p class="err-msg">Seleccione una opción para continuar.</p>
+    <div class="nav">
+      <button class="btn-back" disabled>Anterior</button>
+      <button class="btn-next" onclick="next()">Siguiente <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg></button>
+    </div>
+  </div>
+
+  <!-- P2 -->
+  <div class="card" id="card-2">
+    <p class="q-num">Pregunta 2 de 10</p>
+    <p class="q-text">¿Tiene actualmente algún sistema de filtración de agua en su negocio o taller?</p>
+    <div class="options">
+      <label class="opt"><input type="radio" name="p2" value="a"><span class="opt-text">No, el agua residual se descarga directamente</span></label>
+      <label class="opt"><input type="radio" name="p2" value="b"><span class="opt-text">Sí, uso un sistema básico (sedimentadores o mallas)</span></label>
+      <label class="opt"><input type="radio" name="p2" value="c"><span class="opt-text">Sí, cuento con un sistema de filtración industrial</span></label>
+      <label class="opt"><input type="radio" name="p2" value="d"><span class="opt-text">Estoy en proceso de adquirir uno</span></label>
+    </div>
+    <p class="err-msg">Seleccione una opción para continuar.</p>
+    <div class="nav">
+      <button class="btn-back" onclick="prev()">Anterior</button>
+      <button class="btn-next" onclick="next()">Siguiente <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg></button>
+    </div>
+  </div>
+
+  <!-- P3 -->
+  <div class="card" id="card-3">
+    <p class="q-num">Pregunta 3 de 10</p>
+    <p class="q-text">Si ya tiene filtros instalados, ¿con qué frecuencia los cambia o realiza mantenimiento?</p>
+    <div class="options">
+      <label class="opt"><input type="radio" name="p3" value="a"><span class="opt-text">No aplica / no tengo filtros</span></label>
+      <label class="opt"><input type="radio" name="p3" value="b"><span class="opt-text">Mensualmente o con más frecuencia</span></label>
+      <label class="opt"><input type="radio" name="p3" value="c"><span class="opt-text">Cada 3 a 6 meses</span></label>
+      <label class="opt"><input type="radio" name="p3" value="d"><span class="opt-text">Una vez al año o menos</span></label>
+      <label class="opt"><input type="radio" name="p3" value="e"><span class="opt-text">Nunca los he cambiado</span></label>
+    </div>
+    <p class="err-msg">Seleccione una opción para continuar.</p>
+    <div class="nav">
+      <button class="btn-back" onclick="prev()">Anterior</button>
+      <button class="btn-next" onclick="next()">Siguiente <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg></button>
+    </div>
+  </div>
+
+  <!-- P4 -->
+  <div class="card" id="card-4">
+    <p class="q-num">Pregunta 4 de 10</p>
+    <p class="q-text">¿Estaría dispuesto a usar filtros de agua fabricados a partir de colillas de cigarrillo recicladas?</p>
+    <div class="q-note">El acetato de las colillas, una vez tratado y desinfectado, es eficiente para retener aceites, metales pesados y partículas en suspensión.</div>
+    <div class="options">
+      <label class="opt"><input type="radio" name="p4" value="a"><span class="opt-text">Sí, me parece una buena idea si el filtro funciona bien</span></label>
+      <label class="opt"><input type="radio" name="p4" value="b"><span class="opt-text">Sí, pero necesito ver primero pruebas de laboratorio</span></label>
+      <label class="opt"><input type="radio" name="p4" value="c"><span class="opt-text">No, el origen del material me genera desconfianza</span></label>
+      <label class="opt"><input type="radio" name="p4" value="d"><span class="opt-text">No lo usaría bajo ninguna circunstancia</span></label>
+    </div>
+    <p class="err-msg">Seleccione una opción para continuar.</p>
+    <div class="nav">
+      <button class="btn-back" onclick="prev()">Anterior</button>
+      <button class="btn-next" onclick="next()">Siguiente <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg></button>
+    </div>
+  </div>
+
+  <!-- P5 -->
+  <div class="card" id="card-5">
+    <p class="q-num">Pregunta 5 de 10</p>
+    <p class="q-text">Al momento de comprar un sistema de filtración, ¿qué factor considera más importante? <span style="font-size:12px;color:#888;font-weight:normal;">(Puede elegir hasta 2)</span></p>
+    <div class="options">
+      <label class="opt"><input type="checkbox" name="p5" value="precio"><span class="opt-text">Precio accesible</span></label>
+      <label class="opt"><input type="checkbox" name="p5" value="eficiencia"><span class="opt-text">Eficiencia de filtración comprobada</span></label>
+      <label class="opt"><input type="checkbox" name="p5" value="ambiental"><span class="opt-text">Impacto ambiental positivo</span></label>
+      <label class="opt"><input type="checkbox" name="p5" value="durabilidad"><span class="opt-text">Durabilidad del producto</span></label>
+      <label class="opt"><input type="checkbox" name="p5" value="soporte"><span class="opt-text">Servicio técnico y soporte</span></label>
+    </div>
+    <p class="err-msg">Seleccione al menos una opción para continuar.</p>
+    <div class="nav">
+      <button class="btn-back" onclick="prev()">Anterior</button>
+      <button class="btn-next" onclick="next()">Siguiente <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg></button>
+    </div>
+  </div>
+
+  <!-- P6 -->
+  <div class="card" id="card-6">
+    <p class="q-num">Pregunta 6 de 10</p>
+    <p class="q-text">¿Cuánto estaría dispuesto a pagar por una unidad de filtro ecológico para su negocio?</p>
+    <div class="options">
+      <label class="opt"><input type="radio" name="p6" value="a"><span class="opt-text">Menos de $50.000 COP</span></label>
+      <label class="opt"><input type="radio" name="p6" value="b"><span class="opt-text">Entre $50.000 y $100.000 COP</span></label>
+      <label class="opt"><input type="radio" name="p6" value="c"><span class="opt-text">Entre $100.000 y $150.000 COP</span></label>
+      <label class="opt"><input type="radio" name="p6" value="d"><span class="opt-text">Más de $150.000 COP si la calidad lo justifica</span></label>
+    </div>
+    <p class="err-msg">Seleccione una opción para continuar.</p>
+    <div class="nav">
+      <button class="btn-back" onclick="prev()">Anterior</button>
+      <button class="btn-next" onclick="next()">Siguiente <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg></button>
+    </div>
+  </div>
+
+  <!-- P7 -->
+  <div class="card" id="card-7">
+    <p class="q-num">Pregunta 7 de 10</p>
+    <p class="q-text">¿Cree que usar este tipo de filtros podría mejorar la imagen ambiental de su empresa o negocio?</p>
+    <div class="options">
+      <label class="opt"><input type="radio" name="p7" value="a"><span class="opt-text">Sí, mejoraría mucho mi imagen ante clientes y autoridades</span></label>
+      <label class="opt"><input type="radio" name="p7" value="b"><span class="opt-text">Sí, un poco, aunque no es mi principal motivación</span></label>
+      <label class="opt"><input type="radio" name="p7" value="c"><span class="opt-text">No creo que haga diferencia visible</span></label>
+      <label class="opt"><input type="radio" name="p7" value="d"><span class="opt-text">No, la imagen ambiental no me preocupa</span></label>
+    </div>
+    <p class="err-msg">Seleccione una opción para continuar.</p>
+    <div class="nav">
+      <button class="btn-back" onclick="prev()">Anterior</button>
+      <button class="btn-next" onclick="next()">Siguiente <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg></button>
+    </div>
+  </div>
+
+  <!-- P8 -->
+  <div class="card" id="card-8">
+    <p class="q-num">Pregunta 8 de 10</p>
+    <p class="q-text">¿Qué tipo de contaminante le preocupa más filtrar en el agua residual de su negocio?</p>
+    <div class="options">
+      <label class="opt"><input type="radio" name="p8" value="a"><span class="opt-text">Aceites y grasas</span></label>
+      <label class="opt"><input type="radio" name="p8" value="b"><span class="opt-text">Metales pesados (plomo, cromo, cobre)</span></label>
+      <label class="opt"><input type="radio" name="p8" value="c"><span class="opt-text">Sólidos en suspensión y sedimentos</span></label>
+      <label class="opt"><input type="radio" name="p8" value="d"><span class="opt-text">Productos químicos y solventes</span></label>
+      <label class="opt"><input type="radio" name="p8" value="e"><span class="opt-text">No sé qué tipo de contaminante genera mi negocio</span></label>
+    </div>
+    <p class="err-msg">Seleccione una opción para continuar.</p>
+    <div class="nav">
+      <button class="btn-back" onclick="prev()">Anterior</button>
+      <button class="btn-next" onclick="next()">Siguiente <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg></button>
+    </div>
+  </div>
+
+  <!-- P9 -->
+  <div class="card" id="card-9">
+    <p class="q-num">Pregunta 9 de 10</p>
+    <p class="q-text">¿Cómo preferiría adquirir los filtros ecológicos?</p>
+    <div class="options">
+      <label class="opt"><input type="radio" name="p9" value="a"><span class="opt-text">Compra directa a domicilio (el proveedor viene al negocio)</span></label>
+      <label class="opt"><input type="radio" name="p9" value="b"><span class="opt-text">En un punto de distribución o ferretería aliada</span></label>
+      <label class="opt"><input type="radio" name="p9" value="c"><span class="opt-text">Pedido en línea con envío</span></label>
+      <label class="opt"><input type="radio" name="p9" value="d"><span class="opt-text">A través de una suscripción con cambio periódico incluido</span></label>
+    </div>
+    <p class="err-msg">Seleccione una opción para continuar.</p>
+    <div class="nav">
+      <button class="btn-back" onclick="prev()">Anterior</button>
+      <button class="btn-next" onclick="next()">Siguiente <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg></button>
+    </div>
+  </div>
+
+  <!-- P10 -->
+  <div class="card" id="card-10">
+    <p class="q-num">Pregunta 10 de 10</p>
+    <p class="q-text">Si el filtro funciona correctamente, ¿lo recomendaría a otros negocios o colegas del sector?</p>
+    <div class="options">
+      <label class="opt"><input type="radio" name="p10" value="a"><span class="opt-text">Sí, sin duda, lo recomendaría activamente</span></label>
+      <label class="opt"><input type="radio" name="p10" value="b"><span class="opt-text">Probablemente sí, si quedo satisfecho con el producto</span></label>
+      <label class="opt"><input type="radio" name="p10" value="c"><span class="opt-text">Tal vez, dependiendo del precio que les ofrezcan</span></label>
+      <label class="opt"><input type="radio" name="p10" value="d"><span class="opt-text">No acostumbro a recomendar productos</span></label>
+    </div>
+    <p class="err-msg">Seleccione una opción para continuar.</p>
+    <div class="nav">
+      <button class="btn-back" onclick="prev()">Anterior</button>
+      <button class="btn-next" onclick="submitForm()">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+        Enviar
+      </button>
+    </div>
+  </div>
+
+  <!-- SUCCESS -->
+  <div class="success" id="success">
+    <div class="success-check">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+      </svg>
+    </div>
+    <h2>Respuestas registradas</h2>
+    <p>Gracias por participar. Sus respuestas fueron guardadas correctamente.</p>
+    <div class="success-id" id="success-id">—</div>
+  </div>
+
+</div>
+
+<script>
+  let current = 1;
+  const total = 10;
+
+  function updateUI() {
+    document.getElementById('hcount').textContent = current + ' / ' + total;
+    document.getElementById('pbar').style.width = (current / total * 100) + '%';
+  }
+
+  function isAnswered(n) {
+    const radios = document.querySelectorAll('input[name="p' + n + '"]:checked');
+    const checks = document.querySelectorAll('input[name="p' + n + '"][type="checkbox"]:checked');
+    return radios.length > 0 || checks.length > 0;
+  }
+
+  function next() {
+    const card = document.getElementById('card-' + current);
+    if (!isAnswered(current)) {
+      card.classList.add('has-error');
+      return;
+    }
+    card.classList.remove('has-error');
+    card.classList.remove('active');
+    current++;
+    updateUI();
+    document.getElementById('card-' + current).classList.add('active');
+  }
+
+  function prev() {
+    if (current <= 1) return;
+    document.getElementById('card-' + current).classList.remove('active');
+    current--;
+    updateUI();
+    document.getElementById('card-' + current).classList.add('active');
+  }
+
+  function submitForm() {
+    const card = document.getElementById('card-10');
+    if (!isAnswered(10)) {
+      card.classList.add('has-error');
+      return;
+    }
+    card.classList.remove('active');
+    const id = 'FE-' + Date.now().toString(36).toUpperCase();
+    document.getElementById('success-id').textContent = 'ID: ' + id;
+    document.getElementById('success').classList.add('active');
+    document.getElementById('hcount').textContent = 'Completado';
+    document.getElementById('pbar').style.width = '100%';
+  }
+
+  // Limitar checkboxes p5 a maximo 2
+  document.querySelectorAll('input[name="p5"]').forEach(function(cb) {
+    cb.addEventListener('change', function() {
+      var checked = document.querySelectorAll('input[name="p5"]:checked');
+      if (checked.length > 2) this.checked = false;
+    });
+  });
+</script>
+</body>
+</html>
